@@ -2,7 +2,7 @@
 
 Security design
 ---------------
-Bearer tokens transmitted over NetBird mesh VPN (encrypted peer-to-peer).
+Bearer tokens transmitted over mesh VPN such as NetBird (encrypted peer-to-peer).
 A captured token allows an attacker to claim a different IP for the
 compromised agent. This is a documented accepted risk for v1; HMAC-based
 per-message signing is noted as a future enhancement.

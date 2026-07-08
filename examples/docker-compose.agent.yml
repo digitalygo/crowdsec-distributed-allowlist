@@ -21,8 +21,8 @@ services:
     # env-var alternative (uncomment and remove --config + volume above):
     # ------------------------------------------------------------------
     # environment:
-    #   CDA_SERVER_URL: http://100.92.0.5:8787/v1/heartbeat
-    #   CDA_AGENT: office-milano
+    #   CDA_SERVER_URL: http://crowdsec-distributed-allowlist.internal:8787/v1/heartbeat
+    #   CDA_AGENT: ufficio-digitalygo-parma
     #   CDA_TOKEN: cda_...
     #   CDA_INTERVAL: "300"
     volumes:

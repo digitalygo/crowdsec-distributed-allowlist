@@ -1,7 +1,7 @@
 # Server mode - manages CrowdSec allowlists via docker exec into the
 # crowdsec container. Mounts the Docker socket (root-equivalent on host);
 # this is only acceptable because the service is reachable exclusively
-# over the NetBird mesh VPN. Never expose this port on 0.0.0.0 or any
+# over the mesh VPN such as NetBird. Never expose this port on 0.0.0.0 or any
 # public interface.
 #
 # Run together with your Pangolin / Traefik / CrowdSec stack:
@@ -21,13 +21,13 @@ services:
       # - "--log-level"
       # - "DEBUG"
     ports:
-      # REPLACE 100.92.0.5 WITH YOUR NETBIRD MESH INTERFACE IP.
+      # REPLACE <MESH_VPN_IP_ON_VPS> WITH YOUR MESH VPN INTERFACE IP.
       # Docker published ports bypass ufw/iptables INPUT rules entirely.
       # Binding to the mesh IP (instead of 0.0.0.0) ensures the listening
       # port is only reachable through the VPN tunnel. For additional
       # hardening, use iptables on the DOCKER-USER chain to restrict access
       # by source address.
-      - "100.92.0.5:8787:8787"
+      - "<MESH_VPN_IP_ON_VPS>:8787:8787"
     volumes:
       # Server configuration (read-only). Create this file from
       # examples/server-config.json before starting.

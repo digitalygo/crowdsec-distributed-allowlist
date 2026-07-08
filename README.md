@@ -1,8 +1,8 @@
 # crowdsec-distributed-allowlist
 
 Distributed dynamic CrowdSec allowlist system. Trusted remote sites (Raspberry
-Pi Zero class devices behind a NetBird mesh VPN) self-discover their public
-IPv4 address and report it to a central server. The server keeps CrowdSec
+Pi Zero class devices behind a mesh VPN such as NetBird) self-discover their
+public IPv4 address and report it to a central server. The server keeps CrowdSec
 centralized allowlists updated via `docker exec crowdsec cscli`, so your
 reverse proxies never block the office that manages them.
 
@@ -15,11 +15,11 @@ Office (Pi Zero / bare metal agent)
   │    api.ipify.org / checkip.amazonaws.com / ifconfig.me
   │
   ▼
-  NetBird mesh VPN (encrypted peer to peer)
+  Mesh VPN, for example NetBird (encrypted peer to peer)
   │
   │ 2. POST /v1/heartbeat
   │    Authorization: Bearer <token>
-  │    {"agent":"office-milano","public_ipv4":"93.45.12.34"}
+  │    {"agent":"ufficio-digitalygo-parma","public_ipv4":"93.45.12.34"}
   │
   ▼
   VPS Docker host
@@ -38,7 +38,7 @@ Office (Pi Zero / bare metal agent)
 
 ## Why agents send the public IPv4 in the payload
 
-The server only sees the NetBird mesh source IP of each agent, never the
+The server only sees the mesh VPN source IP of each agent, never the
 office WAN IP. TCP source address is useless for allowlisting. The agent must
 self-discover its public IPv4 by querying external IP providers and include it
 in the heartbeat payload. The server validates the reported IP (must be a
@@ -48,19 +48,19 @@ genuine public IPv4) before trusting it.
 
 The server exposes a bearer-token authenticated write endpoint and mounts the
 Docker socket (`/var/run/docker.sock`), which is root-equivalent on the
-host. The NetBird mesh VPN is the security boundary. The published port must be
-bound to the NetBird interface IP, never to `0.0.0.0`.
+host. The mesh VPN, for example NetBird, is the security boundary. The published port must be
+bound to the mesh VPN interface IP, never to `0.0.0.0`.
 
 > **Warning:** Docker published ports bypass `ufw` INPUT rules. Binding to
 > `0.0.0.0` publishes the port on all host interfaces regardless of firewall
-> rules. Always bind to the NetBird mesh IP (e.g. `100.92.0.5:8787:8787`).
+> rules. Always bind to the mesh VPN IP (e.g. `<MESH_VPN_IP_ON_VPS>:8787:8787`).
 
 ## Requirements
 
 - **Server (VPS):** CrowdSec >= 1.6.0 (1.6.8+ recommended for centralized
-  allowlists), Docker, NetBird mesh VPN
+  allowlists), Docker, mesh VPN such as NetBird
 - **Agent (remote site):** Python >= 3.9 (stdlib only, zero Python
-  dependencies), NetBird mesh VPN
+  dependencies), mesh VPN such as NetBird
 - The agent needs **no** CrowdSec credentials and **no** Docker
 
 ## Quick start server
@@ -93,7 +93,8 @@ Save the output. It prints a ready-to-use agent config snippet.
 ### 3. Write the server config
 
 Create `server.json` (chmod 600). Replace the `token_hash` with the one from
-step 2:
+step 2. The `listen.host` can remain `0.0.0.0` inside the container, but bind
+the published Docker port only to the mesh VPN interface IP:
 
 ```json
 {
@@ -107,7 +108,7 @@ step 2:
     "timeout_seconds": 60
   },
   "agents": {
-    "office-milano": {
+    "ufficio-digitalygo-parma": {
       "token_hash": "pbkdf2_sha256$100000$abc...$def...",
       "enabled": true,
       "allowlist": "dynamic-safe-offices",
@@ -140,8 +141,8 @@ services:
       - "./data/allowlist:/data"
       - "/var/run/docker.sock:/var/run/docker.sock"
     ports:
-      # REPLACE with your NetBird mesh interface IP
-      - "100.92.0.5:8787:8787"
+      # REPLACE with your mesh VPN interface IP
+      - "<MESH_VPN_IP_ON_VPS>:8787:8787"
     restart: unless-stopped
 ```
 
@@ -151,7 +152,7 @@ services:
 docker compose up -d crowdsec-distributed-allowlist
 
 # Verify over the mesh VPN (from any mesh peer):
-curl http://100.92.0.5:8787/health
+curl http://crowdsec-distributed-allowlist.internal:8787/health
 # {"ok": true}
 ```
 
@@ -163,8 +164,8 @@ Create `agent.json` (chmod 600):
 
 ```json
 {
-  "server_url": "http://100.92.0.5:8787/v1/heartbeat",
-  "agent": "office-milano",
+  "server_url": "http://crowdsec-distributed-allowlist.internal:8787/v1/heartbeat",
+  "agent": "ufficio-digitalygo-parma",
   "token": "cda_aB3xK...",
   "interval": 300,
   "timeout": 10,
@@ -206,8 +207,8 @@ crowdsec-distributed-allowlist agent --config agent.json --once --log-level DEBU
 Or with env vars only (no config file):
 
 ```bash
-export CDA_SERVER_URL=http://100.92.0.5:8787/v1/heartbeat
-export CDA_AGENT=office-milano
+export CDA_SERVER_URL=http://crowdsec-distributed-allowlist.internal:8787/v1/heartbeat
+export CDA_AGENT=ufficio-digitalygo-parma
 export CDA_TOKEN=cda_aB3xK...
 crowdsec-distributed-allowlist agent --once --log-level DEBUG
 ```
@@ -381,7 +382,7 @@ empty with a warning; they never crash the server.
 ```json
 {
   "agents": {
-    "office-milano": {
+    "ufficio-digitalygo-parma": {
       "public_ipv4": "93.45.12.34",
       "last_seen": "2026-07-08T10:00:00+00:00",
       "last_refresh": "2026-07-08T10:00:00+00:00"
@@ -403,7 +404,7 @@ empty with a warning; they never crash the server.
 ```json
 {
   "ok": true,
-  "agent": "office-milano",
+  "agent": "ufficio-digitalygo-parma",
   "public_ipv4": "93.45.12.34",
   "changed": true,
   "refreshed": false,
@@ -425,7 +426,7 @@ Error responses:
   hashes (100,000 iterations). Tokens are 256-bit random strings (`cda_` +
   `secrets.token_urlsafe(32)`). Verification is constant-time via
   `hmac.compare_digest`.
-- **Bearer over mesh.** Transport security comes from the NetBird mesh VPN
+- **Bearer over mesh.** Transport security comes from the mesh VPN such as NetBird
   (peer-to-peer WireGuard encryption). HMAC-based authentication and replay
   protection are deliberately deferred to future work; replaying a heartbeat
   requires a compromised mesh peer, which is a higher-threat scenario than v1
@@ -434,7 +435,7 @@ Error responses:
   `/var/run/docker.sock` to run `docker exec crowdsec cscli`. This is only
   acceptable because the server is reachable exclusively over the mesh VPN.
 - **Never expose port 8787 publicly.** The compose examples bind the published
-  port to a NetBird mesh IP only.
+  port to a mesh VPN IP only.
 - **`/health` leaks nothing.** No config keys, no agent list, no version, no
   state.
 - **Tokens are never logged.** Subprocess output is logged at DEBUG, but
@@ -453,6 +454,26 @@ Error responses:
   hundreds.
 - **No replay protection.** Heartbeat replay would allowlist a stale IP if a
   mesh peer is compromised. HMAC-based request signing is noted as future work.
+
+## Preconfigured values for the first deployment
+
+These values are used in the examples for the first site:
+
+| Setting | Value |
+| --- | --- |
+| Server DNS name | `crowdsec-distributed-allowlist.internal` |
+| Heartbeat URL | `http://crowdsec-distributed-allowlist.internal:8787/v1/heartbeat` |
+| First agent name | `ufficio-digitalygo-parma` |
+| Default allowlist | `dynamic-safe-offices` |
+
+Do not commit real tokens. Generate the Parma token on the VPS with:
+
+```bash
+docker run --rm ghcr.io/digitalygo/crowdsec-distributed-allowlist:latest token generate
+```
+
+Then paste the generated `token_hash` into `examples/server-config.parma.template.json`
+and the plaintext `token` into the agent config installed on the Raspberry Pi.
 
 ## Troubleshooting
 
@@ -476,7 +497,7 @@ docker exec crowdsec cscli decisions delete --ip 93.45.12.34
 docker logs crowdsec-distributed-allowlist
 
 # Verify server is reachable over the mesh
-curl http://100.92.0.5:8787/health
+curl http://crowdsec-distributed-allowlist.internal:8787/health
 ```
 
 ### Agent troubleshooting

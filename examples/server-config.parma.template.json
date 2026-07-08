@@ -1,0 +1,17 @@
+{
+  "listen": {"host": "0.0.0.0", "port": 8787},
+  "crowdsec": {
+    "container": "crowdsec",
+    "allowlist": "dynamic-safe-offices",
+    "ttl": "36h",
+    "refresh_interval_seconds": 3600,
+    "docker_bin": "docker",
+    "timeout_seconds": 60
+  },
+  "agents": {
+    "ufficio-digitalygo-parma": {
+      "token_hash": "REPLACE_WITH_GENERATED_PBKDF2_TOKEN_HASH",
+      "enabled": true
+    }
+  }
+}

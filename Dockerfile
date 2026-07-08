@@ -4,7 +4,7 @@
 FROM docker:cli AS dockercli
 
 # Stage 2: runtime image. python:3.13-alpine already includes ca-certificates,
-# so outbound HTTPS (ip providers, NetBird coordination) works out of the box.
+# so outbound HTTPS (ip providers, mesh VPN coordination) works out of the box.
 FROM python:3.13-alpine
 
 # docker CLI is a static Go binary - no musl/glibc issue, works on any base.
@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir .
 
 # The image runs as root in v1 because the server subcommand needs access to
 # /var/run/docker.sock (root-equivalent on the host). Acceptable because the
-# server must only be reachable over the NetBird mesh VPN - never on a public,
+# server must only be reachable over a mesh VPN such as NetBird - never on a public,
 # unfiltered interface. See the compose examples for port-binding guidance.
 # Agents that do not need docker.sock can also run rootless; v2 may add a
 # dedicated non-root agent-only image variant.

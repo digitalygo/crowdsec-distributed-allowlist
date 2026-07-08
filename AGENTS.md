@@ -50,7 +50,7 @@ split.
   `public_ipv4` field in heartbeat payloads and the output of discovery
   providers.
 - **Never trust TCP source address for allowlisting.** The server sees the
-  NetBird mesh IP, not the office WAN IP. The agent must self-discover.
+  mesh VPN IP, not the office WAN IP. The agent must self-discover.
 - **`/health` must never expose config, state, or secrets.** The response is
   `{"ok": true}` and nothing else; no version, no agent list, no config keys.
 - **No plaintext tokens in server config.** Only `pbkdf2_sha256$...` hashes.

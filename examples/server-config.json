@@ -9,7 +9,7 @@
     "timeout_seconds": 60
   },
   "agents": {
-    "office-milano": {
+    "ufficio-digitalygo-parma": {
       "token_hash": "pbkdf2_sha256$100000$00112233445566778899aabbccddeeff$00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
       "enabled": true
     },

@@ -1,7 +1,7 @@
 {
   "server_url": "http://crowdsec-distributed-allowlist.internal:8787/v1/heartbeat",
   "agent": "ufficio-digitalygo-parma",
-  "token": "cda_<paste your token here>",
+  "token": "REPLACE_WITH_GENERATED_CDA_TOKEN",
   "interval": 300,
   "timeout": 10,
   "ip_providers": [
