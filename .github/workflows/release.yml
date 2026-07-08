@@ -1,0 +1,41 @@
+name: Automated release
+
+on:
+  push:
+    branches:
+      - main
+      - beta
+      - dev
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+  statuses: read
+  pull-requests: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ${{ github.ref_protected && !contains(github.event.head_commit.message, 'skip ci') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch release notes
+        run: |
+          git fetch --force origin '+refs/notes/semantic-release-*:refs/notes/semantic-release-*' || true
+          git fetch --force origin '+refs/notes/semantic-release:refs/notes/semantic-release' || true
+
+      - name: Semantic release
+        uses: cycjimmy/semantic-release-action@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}

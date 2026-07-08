@@ -1,0 +1,37 @@
+name: Trigger new release and build
+
+on:
+  repository_dispatch:
+    types:
+      - content-update
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: trigger-release-${{ github.event.client_payload.run_id || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  trigger-release:
+    name: Trigger release via commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create empty trigger commit
+        run: |
+          git commit --allow-empty -m "chore: trigger release and build pipeline"
+          git push

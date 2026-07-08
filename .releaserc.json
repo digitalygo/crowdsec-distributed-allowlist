@@ -1,0 +1,41 @@
+{
+  "branches": [
+    "main",
+    {
+      "name": "beta",
+      "prerelease": true,
+      "channel": "beta"
+    },
+    {
+      "name": "dev",
+      "prerelease": true,
+      "channel": "dev"
+    }
+  ],
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "releaseRules": [
+          {
+            "type": "chore",
+            "release": "patch"
+          },
+          {
+            "type": "ci",
+            "release": "patch"
+          }
+        ]
+      }
+    ],
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/github",
+      {
+        "successComment": false,
+        "failComment": false,
+        "releasedLabels": false
+      }
+    ]
+  ]
+}
