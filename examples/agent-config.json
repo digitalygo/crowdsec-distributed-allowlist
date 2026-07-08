@@ -1,0 +1,13 @@
+{
+  "server_url": "http://100.92.0.5:8787/v1/heartbeat",
+  "agent": "office-milano",
+  "token": "cda_<paste your token here>",
+  "interval": 300,
+  "timeout": 10,
+  "ip_providers": [
+    "https://api.ipify.org",
+    "https://checkip.amazonaws.com",
+    "https://ifconfig.me/ip"
+  ],
+  "log_level": "INFO"
+}

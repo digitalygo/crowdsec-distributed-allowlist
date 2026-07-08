@@ -1,0 +1,27 @@
+{
+  "listen": {"host": "0.0.0.0", "port": 8787},
+  "crowdsec": {
+    "container": "crowdsec",
+    "allowlist": "dynamic-safe-offices",
+    "ttl": "36h",
+    "refresh_interval_seconds": 3600,
+    "docker_bin": "docker",
+    "timeout_seconds": 60
+  },
+  "agents": {
+    "office-milano": {
+      "token_hash": "pbkdf2_sha256$100000$00112233445566778899aabbccddeeff$00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+      "enabled": true
+    },
+    "office-roma": {
+      "token_hash": "pbkdf2_sha256$100000$00112233445566778899aabbccddeeff$00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+      "enabled": true,
+      "allowlist": "dynamic-safe-offices-roma",
+      "ttl": "24h"
+    },
+    "office-napoli": {
+      "token_hash": "pbkdf2_sha256$100000$00112233445566778899aabbccddeeff$00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+      "enabled": false
+    }
+  }
+}

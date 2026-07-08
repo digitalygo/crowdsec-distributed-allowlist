@@ -1,0 +1,30 @@
+# Agent mode - runs the heartbeat loop inside Docker. Mounts a read-only
+# agent config file.
+#
+# The package is stdlib-only (zero runtime dependencies), so agents on
+# Raspberry Pi class devices can also run without Docker via systemd.
+# See examples/safe-ip-agent.service for a bare systemd unit.
+#
+# Alternative: skip the config mount entirely and pass settings as
+# environment variables - uncomment the env_file or environment block
+# below and remove the config volume and --config flag.
+
+services:
+  crowdsec-distributed-allowlist-agent:
+    image: ghcr.io/digitalygo/crowdsec-distributed-allowlist:latest
+    container_name: crowdsec-distributed-allowlist-agent
+    command:
+      - agent
+      - "--config"
+      - "/config/agent.json"
+    # ------------------------------------------------------------------
+    # env-var alternative (uncomment and remove --config + volume above):
+    # ------------------------------------------------------------------
+    # environment:
+    #   CDA_SERVER_URL: http://100.92.0.5:8787/v1/heartbeat
+    #   CDA_AGENT: office-milano
+    #   CDA_TOKEN: cda_...
+    #   CDA_INTERVAL: "300"
+    volumes:
+      - "./config/agent.json:/config/agent.json:ro"
+    restart: unless-stopped

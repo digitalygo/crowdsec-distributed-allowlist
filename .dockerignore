@@ -1,0 +1,11 @@
+.git/
+tmp/
+substrate/
+tests/
+examples/
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+*.egg-info

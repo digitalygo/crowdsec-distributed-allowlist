@@ -1,0 +1,41 @@
+# Server mode - manages CrowdSec allowlists via docker exec into the
+# crowdsec container. Mounts the Docker socket (root-equivalent on host);
+# this is only acceptable because the service is reachable exclusively
+# over the NetBird mesh VPN. Never expose this port on 0.0.0.0 or any
+# public interface.
+#
+# Run together with your Pangolin / Traefik / CrowdSec stack:
+#   docker compose -f docker-compose.pangolin.yml -f docker-compose.server.yml up -d
+
+services:
+  crowdsec-distributed-allowlist:
+    image: ghcr.io/digitalygo/crowdsec-distributed-allowlist:latest
+    container_name: crowdsec-distributed-allowlist
+    command:
+      - server
+      - "--config"
+      - "/config/server.json"
+      - "--state"
+      - "/data/state.json"
+      # Set log level (DEBUG, INFO, WARNING, ERROR). Default: INFO.
+      # - "--log-level"
+      # - "DEBUG"
+    ports:
+      # REPLACE 100.92.0.5 WITH YOUR NETBIRD MESH INTERFACE IP.
+      # Docker published ports bypass ufw/iptables INPUT rules entirely.
+      # Binding to the mesh IP (instead of 0.0.0.0) ensures the listening
+      # port is only reachable through the VPN tunnel. For additional
+      # hardening, use iptables on the DOCKER-USER chain to restrict access
+      # by source address.
+      - "100.92.0.5:8787:8787"
+    volumes:
+      # Server configuration (read-only). Create this file from
+      # examples/server-config.json before starting.
+      - "./config/allowlist-server.json:/config/server.json:ro"
+      # Persistent state directory (IP mappings, timestamps).
+      - "./data/allowlist:/data"
+      # Docker socket - required for `docker exec` into the crowdsec
+      # container. Root-equivalent on the host; acceptable only because
+      # this service is unreachable outside the mesh VPN.
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    restart: unless-stopped

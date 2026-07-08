@@ -1,0 +1,32 @@
+[Unit]
+Description=CrowdSec distributed allowlist agent
+Documentation=https://github.com/digitalygo/crowdsec-distributed-allowlist
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Run the agent with its config file.
+# Adjust the config path as needed.
+ExecStart=/usr/bin/python3 -m crowdsec_distributed_allowlist agent --config /etc/crowdsec-distributed-allowlist/agent.json
+
+# DynamicUser is intentionally omitted: the agent must read a root-owned
+# chmod 600 token file at /etc/crowdsec-distributed-allowlist/agent.json
+# which an ephemeral DynamicUser cannot access. The agent runs as root
+# (default) but only makes outbound HTTPS/mesh requests via a sandboxed
+# environment (NoNewPrivileges + ProtectSystem=strict + ProtectHome + PrivateTmp).
+#
+# Alternative for venv-based install:
+# ExecStart=/opt/crowdsec-distributed-allowlist/venv/bin/crowdsec-distributed-allowlist agent --config /etc/crowdsec-distributed-allowlist/agent.json
+
+# Always restart on failure; wait 30 s between attempts.
+Restart=always
+RestartSec=30
+
+# Sandbox: the agent needs only outbound HTTPS and does not write local state.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
